@@ -8,15 +8,11 @@ Ce dépôt contient les instructions et les outils nécessaires pour réactiver 
 
 Pour utiliser le script, vous devez d'abord pouvoir ouvrir la console Discord.
 
-### Option 1 : Via Navigateur (Recommandé)
-
-Ouvrez [Discord Web](https://www.google.com/search?q=https://discord.com/app) sur Chrome ou Firefox. Appuyez sur `F12` ou `Ctrl + Shift + I`.
-
-### Option 2 : Via l'application Bureau
+### Via l'application Bureau (obligatoire !)
 
 1. Fermez Discord.
-2. Allez dans `%appdata%/discord/settings.json`.
-3. Ajoutez cette ligne au fichier :
+2. Allez dans `%appdata%/discord/settings.json`. (vous pouver coller l'URL dans la barre de recherche fichier)
+3. Ajoutez cette ligne au fichier (en rajoutant une virgule a la ligne d'avent):
 ```json
 "DANGEROUS_ENABLE_DEVTOOLS_ONLY_ENABLE_IF_YOU_KNOW_WHAT_YOURE_DOING": true
 
@@ -210,6 +206,20 @@ if(!quest) {
 
 * **Confidentialité :** Ne partagez jamais de captures d'écran de l'onglet `Network` (Réseau).
 * **Bannissement :** Bien que ce script soit discret, l'utilisation de méthodes d'automatisation est techniquement contre les ToS de Discord. Utilisez-le à vos propres risques.
+
+---
+
+Voici la section à ajouter à ton fichier pour respecter la source originale et remercier l'auteur. Tu peux l'insérer juste après la section **Script d'automatisation** ou avant la **Licence**.
+
+---
+
+## 🔗 Crédits & Source originale
+
+Le script utilisé dans ce dépôt n'est pas de moi. Il provient du travail de **aamiaa** et est disponible sur ce Gist :
+
+📌 **Source :** [Gist GitHub - aamiaa/discord-quest.js](https://gist.github.com/aamiaa/204cd9d42013ded9faf646fae7f89fbb)
+
+Un grand merci à l'auteur original pour la maintenance et la mise à jour régulière des méthodes d'injection Webpack.
 
 ---
 
