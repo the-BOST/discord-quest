@@ -1,56 +1,218 @@
-Voici une proposition pour un **README.md** professionnel, clair et bien structuré pour votre projet GitHub.
-
----
-
 # 🛠️ Discord Quest DevTools
 
-Ce dépôt explique comment réactiver les outils de développement (Inspecteur Web) dans l'application Discord de bureau pour faciliter le débogage ou l'automatisation liée aux "Quests".
+Ce dépôt contient les instructions et les outils nécessaires pour réactiver l'inspecteur web sur Discord et automatiser la progression des **Discord Quests** (Quêtes Discord).
 
 ---
 
 ## 🚀 Activation des DevTools
 
-Il existe deux méthodes principales pour accéder à la console Discord :
+Pour utiliser le script, vous devez d'abord pouvoir ouvrir la console Discord.
 
-### 1. Utilisation du Navigateur
+### Option 1 : Via Navigateur (Recommandé)
 
-La solution la plus simple reste d'ouvrir Discord via votre navigateur (Chrome, Firefox, Edge, etc.). Vous pouvez alors utiliser le raccourci classique `F12` ou `Ctrl + Shift + I`.
+Ouvrez [Discord Web](https://www.google.com/search?q=https://discord.com/app) sur Chrome ou Firefox. Appuyez sur `F12` ou `Ctrl + Shift + I`.
 
-### 2. Application Bureau (Mode "Dangerous")
+### Option 2 : Via l'application Bureau
 
-Pour activer l'inspecteur directement sur l'application installée sur votre ordinateur, suivez ces étapes :
-
-1. Fermez complètement Discord.
-2. Rendez-vous dans le dossier de configuration : `%appdata%/discord/`.
-3. Ouvrez le fichier `settings.json` avec un éditeur de texte (Notepad++, VS Code, etc.).
-4. Ajoutez la ligne suivante à l'intérieur du bloc JSON :
-
+1. Fermez Discord.
+2. Allez dans `%appdata%/discord/settings.json`.
+3. Ajoutez cette ligne au fichier :
 ```json
 "DANGEROUS_ENABLE_DEVTOOLS_ONLY_ENABLE_IF_YOU_KNOW_WHAT_YOURE_DOING": true
 
 ```
 
-5. Enregistrez le fichier et relancez Discord. Vous pouvez maintenant utiliser `Ctrl + Shift + I`.
+
+4. Relancez Discord et utilisez `Ctrl + Shift + I`.
 
 ---
 
-## ⚠️ Avertissements de Sécurité (Disclaimer)
+## 📜 Script d'automatisation (quest-script.js)
 
-L'accès à la console de développement donne un contrôle total sur votre instance Discord. **Lisez attentivement ce qui suit :**
+Ce script détecte automatiquement votre quête en cours et simule l'activité nécessaire (Stream, Jeu, Vidéo) pour la valider sans avoir à installer ou lancer le jeu réel.
+
+### Comment l'utiliser ?
+
+1. Copiez l'intégralité du code ci-dessous.
+2. Ouvrez la **Console** dans l'inspecteur Discord.
+3. Si Discord affiche un avertissement, tapez `allow pasting` et appuyez sur Entrée.
+4. Collez le script et appuyez sur **Entrée**.
+
+<details>
+<summary><b>👉 Cliquez pour voir le script (quest-script.js)</b></summary>
+
+```javascript
+
+delete window.$;
+let wpRequire = webpackChunkdiscord_app.push([[Symbol()], {}, r => r]);
+webpackChunkdiscord_app.pop();
+
+let ApplicationStreamingStore = Object.values(wpRequire.c).find(x => x?.exports?.Z?.__proto__?.getStreamerActiveStreamMetadata).exports.Z;
+let RunningGameStore = Object.values(wpRequire.c).find(x => x?.exports?.ZP?.getRunningGames).exports.ZP;
+let QuestsStore = Object.values(wpRequire.c).find(x => x?.exports?.Z?.__proto__?.getQuest).exports.Z;
+let ChannelStore = Object.values(wpRequire.c).find(x => x?.exports?.Z?.__proto__?.getAllThreadsForParent).exports.Z;
+let GuildChannelStore = Object.values(wpRequire.c).find(x => x?.exports?.ZP?.getSFWDefaultChannel).exports.ZP;
+let FluxDispatcher = Object.values(wpRequire.c).find(x => x?.exports?.Z?.__proto__?.flushWaitQueue).exports.Z;
+let api = Object.values(wpRequire.c).find(x => x?.exports?.tn?.get).exports.tn;
+
+let quest = [...QuestsStore.quests.values()].find(x => x.id !== "1412491570820812933" && x.userStatus?.enrolledAt && !x.userStatus?.completedAt && new Date(x.config.expiresAt).getTime() > Date.now())
+let isApp = typeof DiscordNative !== "undefined"
+if(!quest) {
+	console.log("You don't have any uncompleted quests!")
+} else {
+	const pid = Math.floor(Math.random() * 30000) + 1000
+	
+	const applicationId = quest.config.application.id
+	const applicationName = quest.config.application.name
+	const questName = quest.config.messages.questName
+	const taskConfig = quest.config.taskConfig ?? quest.config.taskConfigV2
+	const taskName = ["WATCH_VIDEO", "PLAY_ON_DESKTOP", "STREAM_ON_DESKTOP", "PLAY_ACTIVITY", "WATCH_VIDEO_ON_MOBILE"].find(x => taskConfig.tasks[x] != null)
+	const secondsNeeded = taskConfig.tasks[taskName].target
+	let secondsDone = quest.userStatus?.progress?.[taskName]?.value ?? 0
+
+	if(taskName === "WATCH_VIDEO" || taskName === "WATCH_VIDEO_ON_MOBILE") {
+		const maxFuture = 10, speed = 7, interval = 1
+		const enrolledAt = new Date(quest.userStatus.enrolledAt).getTime()
+		let completed = false
+		let fn = async () => {			
+			while(true) {
+				const maxAllowed = Math.floor((Date.now() - enrolledAt)/1000) + maxFuture
+				const diff = maxAllowed - secondsDone
+				const timestamp = secondsDone + speed
+				if(diff >= speed) {
+					const res = await api.post({url: `/quests/${quest.id}/video-progress`, body: {timestamp: Math.min(secondsNeeded, timestamp + Math.random())}})
+					completed = res.body.completed_at != null
+					secondsDone = Math.min(secondsNeeded, timestamp)
+				}
+				
+				if(timestamp >= secondsNeeded) {
+					break
+				}
+				await new Promise(resolve => setTimeout(resolve, interval * 1000))
+			}
+			if(!completed) {
+				await api.post({url: `/quests/${quest.id}/video-progress`, body: {timestamp: secondsNeeded}})
+			}
+			console.log("Quest completed!")
+		}
+		fn()
+		console.log(`Spoofing video for ${questName}.`)
+	} else if(taskName === "PLAY_ON_DESKTOP") {
+		if(!isApp) {
+			console.log("This no longer works in browser for non-video quests. Use the discord desktop app to complete the", questName, "quest!")
+		} else {
+			api.get({url: `/applications/public?application_ids=${applicationId}`}).then(res => {
+				const appData = res.body[0]
+				const exeName = appData.executables.find(x => x.os === "win32").name.replace(">","")
+				
+				const fakeGame = {
+					cmdLine: `C:\\Program Files\\${appData.name}\\${exeName}`,
+					exeName,
+					exePath: `c:/program files/${appData.name.toLowerCase()}/${exeName}`,
+					hidden: false,
+					isLauncher: false,
+					id: applicationId,
+					name: appData.name,
+					pid: pid,
+					pidPath: [pid],
+					processName: appData.name,
+					start: Date.now(),
+				}
+				const realGames = RunningGameStore.getRunningGames()
+				const fakeGames = [fakeGame]
+				const realGetRunningGames = RunningGameStore.getRunningGames
+				const realGetGameForPID = RunningGameStore.getGameForPID
+				RunningGameStore.getRunningGames = () => fakeGames
+				RunningGameStore.getGameForPID = (pid) => fakeGames.find(x => x.pid === pid)
+				FluxDispatcher.dispatch({type: "RUNNING_GAMES_CHANGE", removed: realGames, added: [fakeGame], games: fakeGames})
+				
+				let fn = data => {
+					let progress = quest.config.configVersion === 1 ? data.userStatus.streamProgressSeconds : Math.floor(data.userStatus.progress.PLAY_ON_DESKTOP.value)
+					console.log(`Quest progress: ${progress}/${secondsNeeded}`)
+					
+					if(progress >= secondsNeeded) {
+						console.log("Quest completed!")
+						
+						RunningGameStore.getRunningGames = realGetRunningGames
+						RunningGameStore.getGameForPID = realGetGameForPID
+						FluxDispatcher.dispatch({type: "RUNNING_GAMES_CHANGE", removed: [fakeGame], added: [], games: []})
+						FluxDispatcher.unsubscribe("QUESTS_SEND_HEARTBEAT_SUCCESS", fn)
+					}
+				}
+				FluxDispatcher.subscribe("QUESTS_SEND_HEARTBEAT_SUCCESS", fn)
+				
+				console.log(`Spoofed your game to ${applicationName}. Wait for ${Math.ceil((secondsNeeded - secondsDone) / 60)} more minutes.`)
+			})
+		}
+	} else if(taskName === "STREAM_ON_DESKTOP") {
+		if(!isApp) {
+			console.log("This no longer works in browser for non-video quests. Use the discord desktop app to complete the", questName, "quest!")
+		} else {
+			let realFunc = ApplicationStreamingStore.getStreamerActiveStreamMetadata
+			ApplicationStreamingStore.getStreamerActiveStreamMetadata = () => ({
+				id: applicationId,
+				pid,
+				sourceName: null
+			})
+			
+			let fn = data => {
+				let progress = quest.config.configVersion === 1 ? data.userStatus.streamProgressSeconds : Math.floor(data.userStatus.progress.STREAM_ON_DESKTOP.value)
+				console.log(`Quest progress: ${progress}/${secondsNeeded}`)
+				
+				if(progress >= secondsNeeded) {
+					console.log("Quest completed!")
+					
+					ApplicationStreamingStore.getStreamerActiveStreamMetadata = realFunc
+					FluxDispatcher.unsubscribe("QUESTS_SEND_HEARTBEAT_SUCCESS", fn)
+				}
+			}
+			FluxDispatcher.subscribe("QUESTS_SEND_HEARTBEAT_SUCCESS", fn)
+			
+			console.log(`Spoofed your stream to ${applicationName}. Stream any window in vc for ${Math.ceil((secondsNeeded - secondsDone) / 60)} more minutes.`)
+			console.log("Remember that you need at least 1 other person to be in the vc!")
+		}
+	} else if(taskName === "PLAY_ACTIVITY") {
+		const channelId = ChannelStore.getSortedPrivateChannels()[0]?.id ?? Object.values(GuildChannelStore.getAllGuilds()).find(x => x != null && x.VOCAL.length > 0).VOCAL[0].channel.id
+		const streamKey = `call:${channelId}:1`
+		
+		let fn = async () => {
+			console.log("Completing quest", questName, "-", quest.config.messages.questName)
+			
+			while(true) {
+				const res = await api.post({url: `/quests/${quest.id}/heartbeat`, body: {stream_key: streamKey, terminal: false}})
+				const progress = res.body.progress.PLAY_ACTIVITY.value
+				console.log(`Quest progress: ${progress}/${secondsNeeded}`)
+				
+				await new Promise(resolve => setTimeout(resolve, 20 * 1000))
+				
+				if(progress >= secondsNeeded) {
+					await api.post({url: `/quests/${quest.id}/heartbeat`, body: {stream_key: streamKey, terminal: true}})
+					break
+				}
+			}
+			
+			console.log("Quest completed!")
+		}
+		fn()
+	}
+}
+
+```
+
+</details>
+
+---
+
+## ⚠️ Sécurité & Responsabilité
 
 > [!CAUTION]
-> **La prudence est de mise.** Une mauvaise manipulation peut entraîner la perte définitive de votre compte.
+> **AUTO-HACK (SELF-XSS) :** Ne collez jamais de code dont vous ne comprenez pas le fonctionnement. Des personnes malveillantes peuvent voler votre **Discord Token** et accéder à vos messages, serveurs et informations de paiement.
 
-* **Ne collez jamais de code inconnu :** Ne copiez/collez jamais de scripts envoyés par d'autres personnes dans votre console. Ces scripts (souvent appelés "Self-bots" ou "Token grabbers") peuvent compromettre votre compte et même infecter votre ordinateur.
-* **Confidentialité des captures d'écran :** Ne partagez jamais de captures d'écran de votre inspecteur web, en particulier l'onglet **Réseau (Network)** ou les **Requêtes**.
-* **Données Sensibles :** Vos identifiants de session (Tokens) sont visibles dans ces outils. Si quelqu'un obtient ces informations, il peut se connecter à votre compte sans avoir besoin de votre mot de passe ni de votre double authentification (2FA).
+* **Confidentialité :** Ne partagez jamais de captures d'écran de l'onglet `Network` (Réseau).
+* **Bannissement :** Bien que ce script soit discret, l'utilisation de méthodes d'automatisation est techniquement contre les ToS de Discord. Utilisez-le à vos propres risques.
 
 ---
 
 ## ⚖️ Licence
 
-Ce projet est purement éducatif. L'utilisateur est seul responsable de l'utilisation qu'il fait de ces informations.
-
----
-
-Souhaitez-vous que j'ajoute une section spécifique sur la manière de trouver les requêtes liées aux Quests une fois la console ouverte ?
+Ce projet est distribué à des fins éducatives uniquement.
