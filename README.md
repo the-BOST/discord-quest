@@ -1,6 +1,8 @@
 # 🛠️ Discord Quest DevTools
 
-Ce dépôt contient les instructions et les outils nécessaires pour réactiver l'inspecteur web sur Discord et automatiser la progression des **Discord Quests** (Quêtes Discord).
+**English:** This repository provides a guide to re-enable Discord's Inspector (DevTools) and includes a script to automate Discord Quests. The documentation below is in French.
+
+**Français :** Ce dépôt explique comment réactiver l'inspecteur Discord et automatiser vos quêtes via un script.
 
 ---
 
