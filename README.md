@@ -37,7 +37,7 @@ Ce script détecte automatiquement votre quête en cours et simule l'activité n
 4. Collez le script et appuyez sur **Entrée**.
 
 <details>
-<summary><b>👉 Cliquez pour voir le script (quest-script.js)</b></summary>
+<b>👉 Cliquez pour voir le script (quest-script.js)</b>
 
 ```javascript
 
