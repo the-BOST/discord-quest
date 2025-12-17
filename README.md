@@ -36,7 +36,6 @@ Ce script détecte automatiquement votre quête en cours et simule l'activité n
 3. Si Discord affiche un avertissement, tapez `allow pasting` et appuyez sur Entrée.
 4. Collez le script et appuyez sur **Entrée**.
 
-<details>
 <b>👉 Cliquez pour voir le script (quest-script.js)</b>
 
 ```javascript
@@ -196,8 +195,6 @@ if(!quest) {
 }
 
 ```
-
-</details>
 
 ---
 
