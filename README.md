@@ -220,6 +220,9 @@ Le script utilisé dans ce dépôt n'est pas de moi. Il provient du travail de *
 
 Un grand merci à l'auteur original pour la maintenance et la mise à jour régulière des méthodes d'injection Webpack.
 
+
+PS: 
+il est juste mieux expliqué et Synthétiser en francais.
 ---
 
 ## ⚖️ Licence
